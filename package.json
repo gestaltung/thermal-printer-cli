@@ -1,0 +1,26 @@
+{
+  "name": "extempore",
+  "version": "0.0.1",
+  "description": "Enables the interfacing between the Extempore Web Platform and a variety of hardware components.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./test/test.js"
+  },
+  "keywords": [
+    "IoT",
+    "Quantified",
+    "Self"
+  ],
+  "author": "Zac Ioannidis",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^2.0.0",
+    "express": "^4.13.4",
+    "moment": "^2.12.0",
+    "ngrok": "^2.1.6",
+    "request": "^2.70.0",
+    "serialport": "^2.0.6",
+    "thermalprinter": "^0.3.8",
+    "twilio": "^2.9.1"
+  }
+}
