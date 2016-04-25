@@ -1,10 +1,10 @@
 'use strict';
 
-var request = require('request');
 var querystring = require('querystring');
+var request = require('request');
 
-var SerialPort = require('serialport').SerialPort;
-var Printer = require('thermalprinter');
+var printUtils = require('./printer');
+var dataUtils = require('./data');
 var _ = require('lodash');
 
 
@@ -35,18 +35,15 @@ exports.ping = function(req, res) {
 };
 
 exports.print = function(req, res) {
-  // var serialPort = new SerialPort(process.env.SERIAL_PORT, {
-  //   baudrate: 19200
-  // })
-
   // var msgBody = req.query.Body.toLowerCase();
   var msgBody = 'summary';
 
   switch (msgBody) {
     case 'summary':
-      retrieveData("20160315", req, function(data){
-        data = transformData(data);
-        res.json(data);
+      dataUtils.retrieveDailyData("20160315", req, function(data){
+        data = dataUtils.transformData(data);
+        printUtils.printDailySummary(req.user.profile.name, data);
+        return res.json(data);
       })
       console.log('summary requested');
       break;
@@ -58,88 +55,75 @@ exports.print = function(req, res) {
       break;
   }
 
-  return;
-
-  // serialPort.on('open',function() {
-  //     var printer = new Printer(serialPort);
-  //     printer.on('ready', function() {
-  //       printer
-  //         .horizontalLine(16)
-  //         .printLine('first line')
-  //         .bold(false)
-  //         .inverse(true)
-  //         .print(function() {
-  //           console.log('done');
-  //           res.status(200).json({
-  //             'status': 'ok'
-  //           });
-  //         });
-  //   });
+  // return res.json({
+  //   'status': 'ok'
   // });
 }
 
 // Get data from the various data sources
-var retrieveData = function(date, req, cb) {
-  // GET SERVER_URL/api/summary/daily?date=xxxx
-  var token = _.find(req.user.tokens, {kind: 'moves'}).accessToken;
-  var baseURL = process.env.SERVER_URL + '/api/summary/daily?date=' + date +" &token=" + token;
-  console.log(baseURL);
-  request.get(baseURL, function(err, request, body) {
-    if (err) {
-      console.log(err);
-      return;
-    }
+// var retrieveDailyData = function(date, req, cb) {
+//   // GET SERVER_URL/api/summary/daily?date=xxxx
+//   var token = _.find(req.user.tokens, {kind: 'moves'}).accessToken;
+//   var baseURL = process.env.SERVER_URL + '/api/summary/daily?date=' + date +" &token=" + token;
+//   console.log(baseURL);
+//   request.get(baseURL, function(err, request, body) {
+//     if (err) {
+//       console.log(err);
+//       return;
+//     }
 
-    return cb(JSON.parse(body));
-  });
-}
+//     return cb(JSON.parse(body));
+//   });
+// }
 
-var transformData = function(data) {
-  // Geolocation data markers
-  var trackpoints = [];
-  var metrics = {};
-  // Find different types of transportation modes
-  var activities = _.compact(_.uniq(_.map(data.movesStoryline, function(d) {
-    if (typeof d.activity !== 'undefined') {
-      return d.activity;
-    }
-  })));
+// var transformData = function(data) {
+//   // Geolocation data markers
+//   var trackpoints = [];
+//   var metrics = {};
+//   // Find different types of transportation modes
+//   var activities = _.compact(_.uniq(_.map(data.movesStoryline, function(d) {
+//     if (typeof d.activity !== 'undefined') {
+//       return d.activity;
+//     }
+//   })));
 
-  _.each(activities, function(d) {
-    metrics[d] = {
-      distance: 0,
-      duration: 0,
-      steps: d==="walking" ? 0 : null
-    };
-  })
+//   _.each(activities, function(d) {
+//     metrics[d] = {
+//       distance: 0,
+//       duration: 0,
+//       steps: d==="walking" ? 0 : null
+//     };
+//   })
 
-  var places = _.compact(_.uniq(_.map(data.movesStoryline, function(d) {
-    if (typeof d.place !== 'undefined') {
-      return d.place;
-    }
-  })));
+//   var places = _.compact(_.uniq(_.map(data.movesStoryline, function(d) {
+//     if (typeof d.place !== 'undefined') {
+//       return d.place;
+//     }
+//   })));
+//   places = _.remove(places, function(d) {
+//     return d !== "unknown"
+//   });
 
-  _.map(data.movesStoryline, function(d) {
-    if (d.type === "move") {
-      _.each(d.trackPoints, function(tp) {
-        trackpoints.push([tp.lat, tp.lon]);
-      })
+//   _.map(data.movesStoryline, function(d) {
+//     if (d.type === "move") {
+//       _.each(d.trackPoints, function(tp) {
+//         trackpoints.push([tp.lat, tp.lon]);
+//       })
 
-      metrics[d.activity].duration += d.duration;
-      metrics[d.activity].distance += d.distance;
+//       metrics[d.activity].duration += d.duration;
+//       metrics[d.activity].distance += d.distance;
 
-      if (d.activity === "walking") {
-        metrics[d.activity].steps += d.steps;
-      }
-    }
-  });
-
-  return ({
-    'trackpoints': trackpoints,
-    'metrics': metrics,
-    'places': places
-  });
-}
+//       if (d.activity === "walking") {
+//         metrics[d.activity].steps += d.steps;
+//       }
+//     }
+//   });
+//   return ({
+//     'metrics': metrics,
+//     'places': places,
+//     'trackpoints': trackpoints
+//   });
+// }
 
 // Set up Twilio authentication
 // Send message to serial
