@@ -23,7 +23,7 @@ exports.retrieveDailyData = function(date, req, cb) {
   });
 }
 
-exports.transformData = function(data) {
+exports.transformDailyData = function(data) {
   // Geolocation data markers
   var trackpoints = [];
   var metrics = {};
@@ -70,4 +70,8 @@ exports.transformData = function(data) {
     'places': places,
     'trackpoints': trackpoints
   });
+}
+
+exports.retrieveDateRangeData = function(date, req, cb) {
+
 }

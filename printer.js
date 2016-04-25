@@ -58,7 +58,39 @@ exports.printDailySummary = function(name, data) {
 }
 
 exports.printDateRange = function(data) {
+  var serialPort = initializePrinter();
+  var artists = __dirname + '/test/artist-cloud.png';
+  var bars = __dirname + '/test/bars.png';
+  serialPort.on('open',function() {
+    var opts = {
+        maxPrintingDots: 15,
+        heatingTime: 150,
+        heatingInterval: 4,
+        commandDelay: 5
+      };
+    var printer = new Printer(serialPort, opts);
+    printer.on('ready', function() {
+      printer
+        .horizontalLine(16)
+        .printLine('Zac Ioannidis')
+        .horizontalLine(16)
+        .printLine('Summary for: 1/3/2016-31/3/2016')
+        .lineFeed(2)
+        .inverse(true)
+        .printLine("Artists")
+        .inverse(false)
+        .printImage(artists)
+        .lineFeed(2)
+        .inverse(true)
+        .printLine("Fitness Overview")
+        .inverse(false)
+        .printImage(bars);
 
+      printer.print(function() {
+        console.log('done')
+      });
+    });
+  })
 }
 
 var initializePrinter = function() {
