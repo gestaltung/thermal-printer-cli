@@ -63,7 +63,7 @@ exports.printDateRange = function(data) {
   var bars = __dirname + '/test/bars.png';
   serialPort.on('open',function() {
     var opts = {
-        maxPrintingDots: 15,
+        maxPrintingDots: 20,
         heatingTime: 150,
         heatingInterval: 4,
         commandDelay: 5

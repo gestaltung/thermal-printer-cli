@@ -55,13 +55,12 @@ exports.print = function(req, res) {
     case 'viz':
       printUtils.printDateRange([1,2,3])
       console.log('abstract visualization');
+      return res.json({
+        'status': 'ok'
+      });
       break;
-    case 'test':
+    default:
       console.log('everything seems to be working');
       break;
   }
-
-  // return res.json({
-  //   'status': 'ok'
-  // });
 }
