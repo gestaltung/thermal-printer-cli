@@ -72,6 +72,16 @@ exports.transformDailyData = function(data) {
   });
 }
 
-exports.retrieveDateRangeData = function(date, req, cb) {
+exports.retrieveDateRangeData = function(from, to, req, cb) {
+  var token = _.find(req.user.tokens, {kind: 'moves'}).accessToken;
+  var baseURL = process.env.SERVER_URL + '/api/summary/daily?from=' + from + "&to=" + to + " &token=" + token;
+  console.log(baseURL);
+  request.get(baseURL, function(err, request, body) {
+    if (err) {
+      console.log(err);
+      return;
+    }
 
+    return cb(JSON.parse(body));
+  });
 }

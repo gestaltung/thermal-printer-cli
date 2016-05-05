@@ -1,7 +1,3 @@
-// A user adds their phone number on the settings page
-// When a user texts then the number is checked on main API server from DB
-// If theres a match with an account and tokens, a response is sent back.
-
 'use strict';
 
 var querystring = require('querystring');
@@ -9,6 +5,8 @@ var request = require('request');
 
 var printUtils = require('./printer');
 var dataUtils = require('./data');
+var vizUtils = require('./viz');
+var utils = require('./utils');
 var _ = require('lodash');
 
 
@@ -38,29 +36,47 @@ exports.ping = function(req, res) {
   res.json(req.user);
 };
 
+/**
+ * Sends parameters to thermal printer after receiving
+ * a text message and parsing the text command.
+ *
+ * Sample text bodies may be:
+ * `summary DDMMYYY`
+ * 'range DDMMYY-DDMMYY'
+ */
 exports.print = function(req, res) {
+  // var msgBody = 'summary 20160315';
+  // var msgBody = 'range 20160318-20160325';
   // var msgBody = req.query.Body.toLowerCase();
-  var msgBody = 'summary';
-  var msgBody = 'viz';
 
-  switch (msgBody) {
+  // var command = utils.parseText(req.query.Body);
+  var command = utils.parseText(req.query.Body || msgBody);
+  console.log(command.mode);
+
+  switch (command.mode) {
     case 'summary':
-      dataUtils.retrieveDailyData("20160315", req, function(data){
+      dataUtils.retrieveDailyData(command.date, req, function(data){
+        // TO DO: Pass data in correct form for image rendering
         data = dataUtils.transformDailyData(data);
+        // vizUtils.renderMap();
         printUtils.printDailySummary(req.user.profile.name, data);
         return res.json(data);
       })
-      console.log('summary requested');
+      console.log('summary requested', command.date);
       break;
-    case 'viz':
-      printUtils.printDateRange([1,2,3])
-      console.log('abstract visualization');
-      return res.json({
-        'status': 'ok'
-      });
+    case 'range':
+      dataUtils.retrieveDateRangeData(command.range.from, command.range.to, req, function(data){
+        // TO DO: Pass data in correct form for printing
+        printUtils.printDateRange(req.user.profile.name, data);
+        return res.json(data);
+      })
+      console.log('date range', command.range.from, command.range.to);
       break;
     default:
-      console.log('everything seems to be working');
+      return res.json({
+        'status': 'failed',
+        'code': 'Incorrect command format'
+      })
       break;
   }
 }

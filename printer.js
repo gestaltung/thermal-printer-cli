@@ -49,10 +49,6 @@ exports.printDailySummary = function(name, data) {
         .inverse(false)
         .printLine("Distance: "+(data.metrics.transport.distance/1000)+" km")
         .printLine("Duration: "+(data.metrics.transport.duration/60)+" minutes")
-
-      // printer.print(function() {
-      //   console.log('done')
-      // });
     });
   });
 }
