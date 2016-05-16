@@ -15,7 +15,7 @@ exports.retrieveDailyData = function(date, req, cb) {
   console.log(baseURL);
   request.get(baseURL, function(err, request, body) {
     if (err) {
-      console.log(err);
+      console.log('err', err);
       return;
     }
 
@@ -74,7 +74,7 @@ exports.transformDailyData = function(data) {
 
 exports.retrieveDateRangeData = function(from, to, req, cb) {
   var token = _.find(req.user.tokens, {kind: 'moves'}).accessToken;
-  var baseURL = process.env.SERVER_URL + '/api/summary/daily?from=' + from + "&to=" + to + " &token=" + token;
+  var baseURL = process.env.SERVER_URL + '/api/moves/summary?from=' + from + "&to=" + to + "&access_token=" + token;
   console.log(baseURL);
   request.get(baseURL, function(err, request, body) {
     if (err) {
@@ -84,4 +84,35 @@ exports.retrieveDateRangeData = function(from, to, req, cb) {
 
     return cb(JSON.parse(body));
   });
+}
+
+exports.transformDateRangeData = function(data) {
+  var all = [];
+  var output = [];
+  _.each(data, function(d) {
+    if (d.summary) {
+      all.push(d.summary);
+    }
+  });
+  all = _.flatten(all);
+  // Unique Activity groups
+  var a_groups = _.map(all, function(d) {
+    return d.activity;
+  });
+  a_groups = _.uniq(a_groups)
+  _.each(a_groups, function(grp) {
+    var agg = {};
+    agg.group = grp;
+
+    // Relevant segments
+    var s = _.filter(all, function(d) {
+      return d.activity === grp;
+    });
+    agg.distance = _.sumBy(s, function(d) {
+      return d.distance;
+    });
+    output.push(agg);
+  })
+
+  return output;
 }

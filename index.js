@@ -27,10 +27,10 @@ app.get('/print', routes.getTokens, routes.print);
 // Start Express server
 app.listen(app.get('port'), function() {
   console.log('running server on port: ', app.get('port'));
-  // ngrok.connect(app.get('port'), function (err, url) {
-  //   console.log('ngrok url is: ', url);
-  //   process.env.PROCESS_URL = url;
-  // });
+  ngrok.connect(app.get('port'), function (err, url) {
+    console.log('ngrok url is: ', url);
+    process.env.PROCESS_URL = url;
+  });
 });
 
 module.exports = app;

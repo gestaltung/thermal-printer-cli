@@ -50,7 +50,14 @@ exports.print = function(req, res) {
   // var msgBody = req.query.Body.toLowerCase();
 
   // var command = utils.parseText(req.query.Body);
-  var command = utils.parseText(req.query.Body || msgBody);
+  // var command = utils.parseText(req.query.Body || msgBody);
+  var command = {};
+  command.date = 20160310;
+  command.mode = 'range';
+  command.range = {};
+  command.range.from = "20160301";
+  command.range.to = "20160331";
+
   console.log(command.mode);
 
   switch (command.mode) {
@@ -67,6 +74,7 @@ exports.print = function(req, res) {
     case 'range':
       dataUtils.retrieveDateRangeData(command.range.from, command.range.to, req, function(data){
         // TO DO: Pass data in correct form for printing
+        data = dataUtils.transformDateRangeData(data);
         printUtils.printDateRange(req.user.profile.name, data);
         return res.json(data);
       })
